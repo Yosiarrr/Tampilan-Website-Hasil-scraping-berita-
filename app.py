@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 from scraper_all import scrape_dan_klasifikasi
 import pandas as pd
 
@@ -14,7 +14,6 @@ def index():
         end_date = request.form.get("end_date")
         max_articles = int(request.form.get("max_articles") or 5)
 
-        # Menampilkan pesan status di konsol
         print(f"Menerima permintaan: start_date={start_date}, end_date={end_date}, max_articles={max_articles}")
         print("Memulai proses scraping dan klasifikasi...")
 
@@ -22,7 +21,6 @@ def index():
 
         if not df_all.empty:
             hasil_all = df_all.to_dict(orient="records")
-            # Pastikan kolom 'isi' tidak terlalu panjang untuk ditampilkan
             for item in hasil_all:
                 item['isi'] = (item['isi'][:200] + '...') if len(item['isi']) > 200 else item['isi']
 
