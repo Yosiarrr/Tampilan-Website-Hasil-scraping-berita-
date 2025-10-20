@@ -7,8 +7,8 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
+import time
 
-# Fungsi untuk membuat driver dipindahkan ke sini
 def _make_chrome_driver(headless=True):
     """Membuat satu instance Chrome driver yang akan digunakan kembali."""
     options = Options()
@@ -21,6 +21,9 @@ def _make_chrome_driver(headless=True):
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
     options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--disable-javascript")  # Disable JavaScript jika tidak diperlukan
+    options.add_argument("--disable-images")  # Disable loading gambar
+    options.add_argument("--disk-cache-size=0")  # Disable disk cache
     
     # Blok ini untuk mencegah deteksi otomatisasi
     try:
@@ -34,8 +37,8 @@ def _make_chrome_driver(headless=True):
         # Fallback jika webdriver-manager gagal (misalnya karena firewall)
         driver = webdriver.Chrome(options=options)
 
-    driver.set_page_load_timeout(30)
-    driver.set_script_timeout(30)
+    driver.set_page_load_timeout(10)  # Timeout lebih pendek
+    driver.set_script_timeout(10)
     print("[INFO] Chrome driver berhasil dibuat.")
     return driver
 
@@ -62,8 +65,10 @@ def _load_model_safe(model_path="model_berita_svm2.pkl"):
         return None
 
 
-# Fungsi utama yang dimodifikasi
 def scrape_dan_klasifikasi(start_date=None, end_date=None, max_articles=5):
+    print("[INFO] Memulai proses scraping...")
+    start_time = time.time()
+    
     # Buat SATU driver untuk semua parser
     driver = _make_chrome_driver(headless=True)
     
@@ -84,14 +89,17 @@ def scrape_dan_klasifikasi(start_date=None, end_date=None, max_articles=5):
     }
 
     try:
-        # Jalankan setiap parser dengan driver yang sama
+        # Jalankan setiap parser secara berurutan dengan driver yang sama
         for name, parser_func in parsers.items():
             print(f"--- Menjalankan parser: {name} ---")
-            df = _try_call(parser_func, driver=driver, start_date=start_date, end_date=end_date, max_articles=max_articles)
+            df = _try_call(parser_func, driver=driver, start_date=start_date, 
+                         end_date=end_date, max_articles=max_articles)
             if isinstance(df, pd.DataFrame) and not df.empty:
                 dfs.append(df)
+                print(f"✅ {name}: {len(df)} artikel ditemukan")
+            else:
+                print(f"❌ {name}: Tidak ada artikel yang berhasil di-parse")
     finally:
-        # Tutup driver HANYA setelah semua parser selesai
         if driver:
             driver.quit()
             print("[INFO] Chrome driver ditutup.")
@@ -100,14 +108,17 @@ def scrape_dan_klasifikasi(start_date=None, end_date=None, max_articles=5):
         print("❌ Tidak ada hasil dari parser mana pun.")
         return pd.DataFrame(), pd.DataFrame()
 
-    df_all = pd.concat(dfs, ignore_index=True).drop_duplicates(subset=["link"]).reset_index(drop=True)
+    # Gabungkan hasil dan hapus duplikat
+    df_all = pd.concat(dfs, ignore_index=True)
+    df_all = df_all.drop_duplicates(subset=["link"]).reset_index(drop=True)
     
-    # ... (Sisa kode untuk klasifikasi tetap sama) ...
+    # Klasifikasi
     model = _load_model_safe("model_berita_svm2.pkl")
     if model is not None:
         try:
             texts = df_all["isi"].fillna("").astype(str).tolist()
             df_all["label"] = model.predict(texts)
+            print(f"✅ Klasifikasi selesai: {sum(df_all['label'] == 1)} artikel ekonomi ditemukan")
         except Exception as e:
             print(f"[WARNING] Klasifikasi gagal: {e}")
             df_all["label"] = -1
@@ -115,4 +126,9 @@ def scrape_dan_klasifikasi(start_date=None, end_date=None, max_articles=5):
         df_all["label"] = -1
 
     df_ekonomi = df_all[df_all["label"] == 1].reset_index(drop=True)
+    
+    duration = time.time() - start_time
+    print(f"[INFO] Proses selesai dalam {duration:.2f} detik")
+    print(f"Total artikel: {len(df_all)}, Artikel ekonomi: {len(df_ekonomi)}")
+    
     return df_all, df_ekonomi
