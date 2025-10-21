@@ -21,9 +21,9 @@ def _make_chrome_driver(headless=True):
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--disable-javascript")  # Disable JavaScript jika tidak diperlukan
-    options.add_argument("--disable-images")  # Disable loading gambar
+    options.add_argument("--disable-images")  # Disable loading gambar untuk kecepatan
     options.add_argument("--disk-cache-size=0")  # Disable disk cache
+    options.add_argument("--disable-notifications")  # Disable notifikasi
     
     # Blok ini untuk mencegah deteksi otomatisasi
     try:

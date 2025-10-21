@@ -17,17 +17,25 @@ def index():
         print(f"Menerima permintaan: start_date={start_date}, end_date={end_date}, max_articles={max_articles}")
         print("Memulai proses scraping dan klasifikasi...")
 
-        df_all, df_ekonomi = scrape_dan_klasifikasi(start_date, end_date, max_articles)
+        try:
+            df_all, df_ekonomi = scrape_dan_klasifikasi(start_date, end_date, max_articles)
+            
+            if df_all is not None and not df_all.empty:
+                hasil_all = df_all.to_dict(orient="records")
+                for item in hasil_all:
+                    item['isi'] = (item['isi'][:200] + '...') if len(str(item['isi'])) > 200 else item['isi']
+                print(f"Berhasil memproses {len(hasil_all)} artikel total")
 
-        if not df_all.empty:
-            hasil_all = df_all.to_dict(orient="records")
-            for item in hasil_all:
-                item['isi'] = (item['isi'][:200] + '...') if len(item['isi']) > 200 else item['isi']
-
-        if not df_ekonomi.empty:
-            hasil_ekonomi = df_ekonomi.to_dict(orient="records")
-            for item in hasil_ekonomi:
-                item['isi'] = (item['isi'][:200] + '...') if len(item['isi']) > 200 else item['isi']
+            if df_ekonomi is not None and not df_ekonomi.empty:
+                hasil_ekonomi = df_ekonomi.to_dict(orient="records")
+                for item in hasil_ekonomi:
+                    item['isi'] = (item['isi'][:200] + '...') if len(str(item['isi'])) > 200 else item['isi']
+                print(f"Berhasil memproses {len(hasil_ekonomi)} artikel ekonomi")
+            
+        except Exception as e:
+            print(f"Error saat memproses hasil: {str(e)}")
+            hasil_all = []
+            hasil_ekonomi = []
         
         print("Proses selesai. Mengirim hasil ke template.")
 

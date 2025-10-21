@@ -125,43 +125,43 @@
       </table>
     </div>
   </div>
-
+</div>
 
       {% elif hasil_all is not none and not hasil_all %}
-<div class="alert alert-warning mt-4 text-center fw-bold" role="alert">
-  Tidak ada berita yang ditemukan dengan kriteria yang diberikan.
-</div>
-{% endif %}
-<script>
+      <div class="alert alert-warning mt-4 text-center fw-bold" role="alert">
+        Tidak ada berita yang ditemukan dengan kriteria yang diberikan.
+      </div>
+      {% endif %}
+    </div>
+  </div>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector("form");       
-    const box  = document.getElementById("loading-box"); 
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.querySelector("form");       
+      const box  = document.getElementById("loading-box"); 
 
-    if (form) {
-      form.addEventListener("submit", function () {
-        if (box) box.style.display = "block";
-        const btn = form.querySelector('button[type="submit"]');
-        if (btn) {
-          btn.disabled = true;
-          if (!btn.dataset.orig) btn.dataset.orig = btn.innerHTML;
-          btn.innerHTML = 'Sedang mengambil...';
-        }
-      
-      });
-    }
-
-    window.addEventListener("load", function () {
-      if (box) box.style.display = "none";
-      const btn = document.querySelector("form button[type='submit']");
-      if (btn && btn.dataset.orig) {
-        btn.innerHTML = btn.dataset.orig;
-        btn.disabled = false;
+      if (form) {
+        form.addEventListener("submit", function () {
+          if (box) box.style.display = "block";
+          const btn = form.querySelector('button[type="submit"]');
+          if (btn) {
+            btn.disabled = true;
+            if (!btn.dataset.orig) btn.dataset.orig = btn.innerHTML;
+            btn.innerHTML = 'Sedang mengambil...';
+          }
+        });
       }
+
+      window.addEventListener("load", function () {
+        if (box) box.style.display = "none";
+        const btn = document.querySelector("form button[type='submit']");
+        if (btn && btn.dataset.orig) {
+          btn.innerHTML = btn.dataset.orig;
+          btn.disabled = false;
+        }
+      });
     });
-  });
-</script> 
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
